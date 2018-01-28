@@ -98,11 +98,15 @@ clean:
         /bin/rm -f *.o test1
 ```
 
-to the end of the **makefile** (where the character before the /bin/rm is a single TAB character). The first two lines contain comments; the third denotes the dependencies; and the fourth contains the command to perform the &quot;cleaning&quot; action.
+to the end of the **makefile** (where the character before the `/bin/rm` is a single TAB character). The first two lines contain comments; the third denotes the dependencies; and the fourth contains the command to perform the &quot;cleaning&quot; action.
 
-Now type make clean and confirm that the all &quot;.o&quot; files and the executable file test1 have gone away. Have they? (circle answer) YES /   NO
+Now type `make clea`n and confirm that the all &quot;.o&quot; files and the executable file test1 have gone away. Have they?
 
-**Checkpoint 1 [20 points]: Show your lab instructor/assistant your answers to the above questions.**
+(circle answer)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; YES &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NO 
+
+---
+
+**Checkpoint 1 [25 points]: Show your lab instructor/assistant your answers to the above questions.**
 
 
 ### Part 2: Modifying the sources (Person 2 at keyboard, Person 1 recording results)
@@ -184,7 +188,7 @@ extern void printPresident(void);
 ---
 
 
-**Checkpoint 2 [20 points]: Show your lab instructor/assistant your answers to the above questions; also show your instructor/assistant your makefile and that it successfully compiles a test1 executable.**
+**Checkpoint 2 [25 points]: Show your lab instructor/assistant your answers to the above questions; also show your instructor/assistant your makefile and that it successfully compiles a test1 executable.**
 
 ### Part 3: Make variables (Person 1 at keyboard, Person 2 recording results)
 
@@ -233,7 +237,8 @@ LDFLAGS  | Options to pass to linker, for example: -L /path/to/libraries -l name
 `CXX` is sually set to `g++`
 
 1
-. Change the compile rule in `GNUmakefile` from `gcc` to `$(CC) $(CFLAGS)`
+. Change the compile rules for `test1.o` and `president.o` in `GNUmakefile` from `gcc -c` to `$(CC) $(CFLAGS) -c`
+and override CC to specify `gcc` instead of the default `cc` command.
 
 2
 . Perform a `make clean` and a `make test1` to ensure that things still build.  Do they?
@@ -268,6 +273,12 @@ Did this work?
 (circle answer)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; YES &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NO 
 
 ---
+
+Run the following command to undo the environment variable
+
+```sh
+unset CFLAGS
+```
 
 5
 . Another place where variables are used is in specifying the set of ".o" files that link together to form an executable, as in
@@ -308,7 +319,8 @@ make -p
 In particular, look for the following defintions:
 
 ```make
-???COMPILE.C = $(CC) $(CFLAGS) $(CPPFLAGS)
+COMPILE.c = $(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+
 LINK.o = $(CC) $(LDFLAGS) $(TARGET_ARCH)
 
 %: %.o
@@ -334,23 +346,34 @@ $<       | Name of the first prerequisite
 $^       | List of all the prerequisites
 
 Another interesing property of makefiles is that it is possible to list only targets and preqrequisites
-_with no rules_. For example:
+_with no rules_. In this case, `make` will fall back on pattern-matching or an already defined rule
+and just update dependencies.  For example:
 
 ```make
 file1:
 
-file1.o: file1.c header1.h header2.h
+file1.o: header1.h header2.h
 ```
 
 The above `makefile` is sufficient to compile the `file1` executable simply by typing `make`.
+Note that it is completely unnecessary to tell `make` that `file1.c` produces `file1.o` --
+it is implicit in the pattern matching rule. It is only necessary to list the
+non-obvious dependencies such as the #included header files.
+
+For this part of the lab, rewrite your `GNUmakefile` to compile your program
+using **only the built-in rules and your custom `clean` rule**.
+Your `makefile` should define exactly the following targets:
+
+- test1
+- test1.o
+- president.o
+- clean
+
+Moreover, `make` will always try to make the first target.
+Thus, your program should compile using only `make`.
 
 
-For this part of the lab, rewrite your `GNUmakefile` to compile your program using **only the built-in rules**.
-
-Your program should compile using only `make`.
-
-
-**Checkpoint 4 [20 points]: Show your lab instructor/assistant new makefile and that you are still able to create a working executable, test1.**
+**Checkpoint 4 [20 points]: Show your lab instructor/assistant new makefile and that you are still able to create a working executable, test1.  Explain to your instructor/assistant how the built-in rules were used.**
 
 ### Part 5: Set up your own makefile (Person 1 at keyboard)
 
@@ -366,15 +389,35 @@ Change into that directory and create a `makefile` such that:
 
 You will need to examine the relationships between the files in order to do this.
 The goal is that you end up with two executables:
+
 - `listForward`, which lists an array forward, and 
 - `listBackward`, which lists an array backward.
+
+
+In order to speed this process up, we will use a special switch to `gcc` that
+generates a `make`-compatibile dependency list.  Run the following command
+to output dependency information. You can then use this to help write your `makefile`.
+
+```sh
+gcc -M *.c
+```
+
+The command will output more than is needed, such as the "%.o: %.c" dependencies,
+as well as dependences on `/usr/include`.
+
+Another hint: your `makefile` should have the following first line,
+which will ensure that both executables are built when you run `make`:
+
+```make
+all: listForward listBackward
+```
 
 You should **not need to modify any C code** here:
 just create the `makefile` so that its dependencies are consistent
 with those among the source and object files
  and so that the proper commands are executed to perform each step of the &quot;build&quot;.
 
-**Checkpoint 5 [20 points]: Demonstrate to your instructor/assistant that the proper files get rebuilt after various sets of source-file modifications are made. Let your instructor/assistant examine your makefile and run your executables.**
+**Checkpoint 5 [10 points]: Demonstrate to your instructor/assistant that the proper files get rebuilt after various sets of source-file modifications are made. Let your instructor/assistant examine your makefile and run your executables.**
 
 
 
